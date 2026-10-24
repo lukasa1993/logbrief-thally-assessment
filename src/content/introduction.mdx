@@ -1,0 +1,62 @@
+---
+title: Logbrief
+description: Turn a local JSONL log export into counts by service and severity, without uploading the file.
+mode: home
+---
+
+<Hero
+  title="Find the noisy service in a log export"
+  subtitle="Logbrief reads a local JSONL file and returns counts by service and severity. No account, external service, or npm dependencies."
+  primaryLabel="Run the quickstart"
+  primaryHref="/quickstart"
+  secondaryLabel="Compare two exports"
+  secondaryHref="/guides/compare-release-logs"
+/>
+
+## Start with a small, inspectable result
+
+Use Logbrief when you have an application log export and want to narrow down
+which service needs investigation. Run one command to count the records, then
+filter by service and minimum severity. The output is JSON you can read or
+save for a later comparison.
+
+```bash
+node demo/logbrief.mjs demo/examples/release.jsonl
+```
+
+The included export contains six synthetic records. The summary reports four
+records for `checkout`, two for `catalog`, and three errors overall. The
+[quickstart](/quickstart) includes the complete expected output.
+
+<CardGroup cols="2">
+  <Card title="Get your first summary" icon="party-horn" href="/quickstart">
+    Run the included example and check the result in a few minutes.
+  </Card>
+  <Card title="Investigate a release" icon="magnifying-glass" href="/guides/compare-release-logs">
+    Narrow the output to checkout errors and compare two synthetic exports.
+  </Card>
+  <Card title="Check the CLI contract" icon="code-simple" href="/reference/cli">
+    Find input requirements, filter behavior, output fields, and exit codes.
+  </Card>
+  <Card title="Read the build notes" icon="book-open" href="/articles/build-logbrief-docs">
+    Review the Thally setup and verification notes for this demo.
+  </Card>
+</CardGroup>
+
+## Know the boundaries
+
+Logbrief is a small assessment demo, not a production monitoring system. It
+reads one UTF-8 JSONL file per run. It does not collect logs, stream a live
+feed, compare files automatically, calculate latency, or diagnose causes.
+It accepts only `debug`, `info`, `warn`, and `error` levels.
+
+The CLI makes no network requests and leaves your input file unchanged.
+Its output contains service names and counts, so review a summary before
+sharing it. The documentation website is separate from the local CLI.
+
+## About the examples
+
+All included log records are synthetic. They contain no customer or
+production data. The demo and documentation were prepared with AI assistance;
+the documented CLI examples were executed and checked by automation using
+Node.js 24.19.0.

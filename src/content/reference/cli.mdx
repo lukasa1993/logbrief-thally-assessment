@@ -1,0 +1,99 @@
+---
+title: CLI reference
+description: Check Logbrief's arguments, JSONL schema, validation rules, output fields, and exit codes.
+---
+
+Use this reference when adapting Logbrief to your own local export. For a
+first run with known input and output, start with the [quickstart](/quickstart).
+
+## Invocation
+
+```text
+node demo/logbrief.mjs FILE [--service NAME] [--min-level LEVEL]
+node demo/logbrief.mjs --help
+```
+
+Put the input path first. The two options can appear in either order, but each
+can appear only once. Quote paths or service names that contain spaces.
+Use `--help` on its own; it prints usage without opening an input file.
+
+| Argument | Behavior |
+| --- | --- |
+| `FILE` | Required path to one UTF-8 JSONL file. Standard input is not supported. |
+| `--service NAME` | Exact, case-sensitive match on the `service` string. Defaults to all services. |
+| `--min-level LEVEL` | Include this severity and higher: `debug`, `info`, `warn`, `error`. Defaults to `debug`. |
+
+Levels are lowercase and case-sensitive. `--min-level warn` includes warnings
+and errors; `--min-level ERROR` is invalid. Unknown flags, duplicate flags,
+and missing option values are errors. There are no short options or
+`--flag=value` forms.
+
+## Input records
+
+Each nonblank physical line must be a JSON object with these fields:
+
+| Field | Requirement |
+| --- | --- |
+| `service` | A string containing at least one non-whitespace character. |
+| `level` | Exactly `debug`, `info`, `warn`, or `error`. |
+
+Additional fields, such as `message`, are allowed but ignored. Logbrief does
+not trim or normalize valid service strings: `checkout` and ` checkout ` are
+different services. JSON arrays, `null`, missing fields, and unsupported
+levels are invalid.
+
+Blank lines are ignored. LF and CRLF line endings, an initial UTF-8 byte-order
+mark, and a final line without a newline are supported. Error line numbers
+refer to physical lines, including blank ones. Keep each record on one line;
+a multi-line pretty-printed JSON object is not JSONL.
+
+## Validation and filters
+
+Logbrief validates every nonblank record before applying your filters. An
+invalid record fails the run even when its service or severity would have
+been excluded. It emits the summary only after the entire file succeeds,
+so an input or validation error cannot return a partial summary.
+
+If you combine `--service` and `--min-level`, a record must satisfy both.
+Repeated records count separately; the tool does not deduplicate them.
+
+## JSON output
+
+On success, standard output contains one formatted JSON object:
+
+| Field | Meaning |
+| --- | --- |
+| `recordsRead` | Number of valid, nonblank input records before filters. |
+| `recordsMatched` | Number of records satisfying all filters. |
+| `byService` | Counts of matched records by exact service name. |
+| `byLevel` | Counts of matched records by severity. |
+
+Categories with no matches are omitted. A valid file with no matching
+records returns `recordsMatched: 0` and empty `byService` and `byLevel`
+objects. An empty or blank-only file also succeeds, with both record counts
+equal to zero.
+
+## Exit codes and errors
+
+| Code | Meaning | Output |
+| --- | --- | --- |
+| `0` | Successful summary, including empty input or no matches; or help. | JSON summary or help on standard output. |
+| `1` | The input file could not be read. | An error on standard error; no summary. |
+| `2` | Invalid arguments, malformed JSON, or an invalid record. | An error on standard error; no summary. |
+
+Typical messages include `Cannot read input: ENOENT`,
+`Line 3: invalid JSON.`, and `Unsupported level: ERROR. Use debug, info, warn, or error.`
+Check the exit code before using redirected output in another script.
+Your shell may create or truncate an output file even when Logbrief fails.
+
+## Scope and data handling
+
+Logbrief reads one local file and makes no network requests. It does not
+modify the input, persist a database, or require an API key. It reads records
+line by line and retains aggregate counts, but this demo has not been
+load-tested and has no explicit file-size or line-length limit.
+
+There is no watch mode, stdin input, timestamp filter, automatic comparison,
+latency calculation, or redaction. The output exposes service names and
+counts. Review it before sharing, even though `message` and other extra
+fields are not included.

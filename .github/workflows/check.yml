@@ -1,0 +1,33 @@
+name: Validate Logbrief documentation
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Test the dependency-free demo
+        run: node --test demo/logbrief.test.mjs
+      - name: Install the lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Check content
+        run: npx --yes --package=@thallylabs/cli@0.8.124 thally check --ci .
+      - name: Check types
+        run: npm run typecheck
+      - name: Build documentation
+        run: npm run build

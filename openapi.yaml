@@ -1,0 +1,8 @@
+openapi: 3.1.0
+info:
+  title: Logbrief CLI
+  version: 1.0.0
+  description: >-
+    Logbrief is a local command-line tool and exposes no HTTP API.
+    See the CLI reference for its input format, flags, output, and exit codes.
+paths: {}

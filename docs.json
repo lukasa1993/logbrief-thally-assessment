@@ -1,0 +1,64 @@
+{
+  "theme": "default",
+  "appearance": {
+    "contentIcons": "accent"
+  },
+  "markdown": {
+    "enabled": true
+  },
+  "i18n": {
+    "defaultLocale": "en",
+    "locales": [
+      {
+        "code": "en",
+        "label": "English"
+      }
+    ]
+  },
+  "navbar": {
+    "primary": {
+      "label": "Run the quickstart",
+      "href": "/quickstart"
+    }
+  },
+  "tabs": [
+    {
+      "tab": "Documentation",
+      "groups": [
+        {
+          "group": "Get started",
+          "pages": [
+            "introduction",
+            "quickstart"
+          ]
+        },
+        {
+          "group": "Guides",
+          "pages": [
+            "guides/compare-release-logs"
+          ]
+        },
+        {
+          "group": "Reference",
+          "pages": [
+            "reference/cli"
+          ]
+        }
+      ]
+    },
+    {
+      "tab": "Build notes",
+      "groups": [
+        {
+          "group": "The assessment",
+          "pages": [
+            "articles/build-logbrief-docs"
+          ]
+        }
+      ]
+    }
+  ],
+  "ai": {
+    "chat": false
+  }
+}

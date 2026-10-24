@@ -1,0 +1,91 @@
+---
+title: Compare checkout errors across two exports
+navTitle: Compare release logs
+description: Use service and severity filters to isolate a change worth investigating, without treating log counts as a diagnosis.
+---
+
+You have two log exports and want to know whether the checkout service needs
+a closer look. This guide uses `before.jsonl` and `release.jsonl`, two bundled
+synthetic fixtures with six records each. They illustrate a workflow, not a
+real release or incident.
+
+Complete the [quickstart](/quickstart) first, then run every command below
+from the project root. Logbrief handles one file at a time; you will compare
+the two summaries yourself.
+
+## Narrow the release export
+
+Filter to checkout errors:
+
+```bash
+node demo/logbrief.mjs demo/examples/release.jsonl --service checkout --min-level error
+```
+
+Expected output:
+
+```json
+{
+  "recordsRead": 6,
+  "recordsMatched": 2,
+  "byService": {
+    "checkout": 2
+  },
+  "byLevel": {
+    "error": 2
+  }
+}
+```
+
+Both filters must match. The command finds two `checkout` records at level
+`error`; it excludes the catalog error and checkout warning. Service names
+and levels are case-sensitive. `Checkout` does not match `checkout`.
+
+## Apply the same filters to the baseline
+
+```bash
+node demo/logbrief.mjs demo/examples/before.jsonl --service checkout --min-level error
+```
+
+Expected output:
+
+```json
+{
+  "recordsRead": 6,
+  "recordsMatched": 0,
+  "byService": {},
+  "byLevel": {}
+}
+```
+
+Zero matches is a successful result, not an error. Here, the baseline has no
+checkout errors, while the release fixture has two. Because both files have
+six records, the comparison is easy to inspect. In real exports, use comparable
+time windows and understand changes in traffic or logging before drawing
+conclusions. Logbrief does not check timestamps or normalize counts by requests.
+
+## Use the summary to choose the next question
+
+The next useful step is to inspect the matching source records, not to declare
+that the release caused a failure. In this fixture, both checkout error
+records contain `"message":"payment timeout"`. Logbrief ignores `message`,
+so that detail comes from reading `demo/examples/release.jsonl`, not from the
+summary.
+
+A count is not a count of affected customers or unique incidents. Repeated
+records, retries, and different logging policies can all affect the total.
+For production work, use your existing logs or observability tooling to
+investigate the underlying requests and timing.
+
+## Handle an invalid export
+
+Logbrief validates every nonblank line before applying filters. A malformed
+catalog record will fail the checkout-only command too. On the first invalid
+record, it writes a line-numbered error to standard error, exits with code
+`2`, and writes no summary to standard output.
+
+Repair the export before rerunning. Do not interpret a missing summary as
+zero errors. An empty file or a valid file with no matches instead succeeds
+with empty count objects.
+
+See the [CLI reference](/reference/cli) for the complete input contract and
+exit-code behavior.

@@ -1,0 +1,179 @@
+---
+title: Build Logbrief documentation with Thally
+navTitle: Building this site
+description: Follow the content structure, local setup, validation checks, and remaining publication steps for this small CLI documentation project.
+---
+
+Logbrief is an original, dependency-free Node.js CLI that summarizes local
+JSONL logs. This walkthrough explains how its documentation was organized in
+Thally, what was tested, and what is still needed to publish the site.
+
+The scope is deliberately small enough for a two-hour assessment: one useful
+CLI, two synthetic exports, a first-run tutorial, a practical guide, and a
+reference. The demo and prose were prepared with AI assistance. CLI examples
+were verified by automated execution, not presented as personal test results.
+
+## Start with an outcome you can verify
+
+The reader's first goal is to summarize a six-record export. That makes a
+better quickstart than a tour of the documentation framework. A second task
+narrows the result to checkout errors and compares a baseline export.
+
+The demo uses Node's built-in file and readline modules, so the reader can
+run it without installing the documentation site's dependencies. Its input
+contract is intentionally strict: every nonblank line must contain a valid
+object, even if a filter would exclude it. A failed run emits no partial
+summary. These details belong in the docs because they change how a reader
+interprets the result.
+
+## Create the Thally project
+
+This assessment used Node.js 24.19.0 and scaffold package
+`create-thally-docs@0.10.121`. For a fresh project, the equivalent command is:
+
+```bash
+npx --yes create-thally-docs@0.10.121 logbrief-docs --yes --install
+cd logbrief-docs
+```
+
+The recorded run used the directory `thally-assessment/site` and a writable
+temporary npm cache because the environment's default cache was not writable.
+That cache override is environment-specific, not a Thally requirement.
+
+The scaffold creates the framework, not Logbrief. The verified source
+repository is [Logbrief assessment](https://github.com/lukasa1993/logbrief-thally-assessment).
+To reproduce the demo, start in a separate project directory and clone the
+source:
+
+```bash
+git clone https://github.com/lukasa1993/logbrief-thally-assessment
+cd logbrief-thally-assessment
+```
+
+Keep the generated `starter-release.json`: it pins this starter's runtime to commit
+`2e0943562b12047c446a4e48c2a5570b0dd3de26`. The scaffold version and runtime
+commit are different release identifiers.
+
+### Recover without discarding your content
+
+The first dependency install and a retry ended with `SIGKILL`. The scaffold
+preserved the content and lockfile and printed a recovery command:
+
+```bash
+npm ci --no-audit --no-fund --progress=false
+```
+
+A constrained install subsequently completed using a writable npm cache and
+these environment-specific options:
+
+```bash
+NODE_OPTIONS=--max-old-space-size=256 \
+npm_config_cache=/tmp/thally-npm-cache \
+npm ci --ignore-scripts --omit=optional \
+  --no-audit --no-fund --progress=false --maxsockets=1
+```
+
+Omitting scripts and optional dependencies required follow-up repairs:
+`npm rebuild esbuild` and restoration of the official
+`@next/swc-linux-x64-gnu@16.4.1` package on this Linux host. This is a record
+of the recovery, not the recommended default install. Keep the lockfile and
+authored files when repairing an interrupted installation.
+
+## Replace the template with a reader journey
+
+Keep the authored surface small:
+
+- `src/content/introduction.mdx`: explain the problem, limits, and next step.
+- `src/content/quickstart.mdx`: give runnable commands and exact output.
+- `src/content/guides/compare-release-logs.mdx`: connect filters to an investigation.
+- `src/content/reference/cli.mdx`: define the contract and error behavior.
+- `src/content/articles/build-logbrief-docs.mdx`: record this setup and publication process.
+
+Each page has a title and description in frontmatter. `docs.json` groups the
+pages into getting started, guides, reference, and build notes.
+`src/data/site.ts` sets the Logbrief name and description. The generic starter
+pages are removed rather than left in search as unrelated product guidance.
+
+Plain Markdown carries the instructions. The introduction uses the starter's
+Hero and Card components to make the next action easy to find. The quickstart
+links to a downloadable demo archive, so a reader can try the CLI without cloning the
+repository. No runtime-owned implementation files need editing for this
+content change. The active repository workflow is limited to validation on
+pull requests or manual runs with read-only repository permissions; the
+starter's scheduled and agent workflows are kept as inactive reference files.
+
+## Test the claims before testing the presentation
+
+From the supplied project's root, run:
+
+```bash
+node --test demo/logbrief.test.mjs
+node demo/logbrief.mjs demo/examples/release.jsonl
+node demo/logbrief.mjs demo/examples/release.jsonl --min-level warn
+node demo/logbrief.mjs demo/examples/release.jsonl --service checkout --min-level error
+node demo/logbrief.mjs demo/examples/before.jsonl --service checkout --min-level error
+```
+
+All 12 demo tests passed on Node.js 24.19.0. The four commands returned
+`recordsMatched` values of 6, 4, 2, and 0. The quickstart and guide include
+their exact JSON output. The fixtures are synthetic, so the comparison
+illustrates a technique rather than proving a real performance regression.
+
+After the site's dependencies are installed, validate the documentation and
+build the site:
+
+```bash
+npx --yes --package=@thallylabs/cli@0.8.124 thally check --ci .
+npm run typecheck
+npm run build
+npm run dev
+```
+
+The content checks run so far passed: Thally CLI 0.8.124 reported zero errors and
+zero warnings, and runtime-source generation embedded eight source files and
+compiled five MDX modules. All 12 demo tests passed again on 24 October 2026.
+A fresh `tsc --noEmit --incremental false` check also passed with exit code 0
+in 8.04 seconds, using `NODE_OPTIONS=--max-old-space-size=768`.
+
+The production webpack build was deliberately stopped after 180 seconds
+while still compiling, without a reported product error. The development
+server became ready, but a page request disconnected before returning an
+HTTP response. Production output, rendered HTML, screenshots, and managed
+publication remain unverified.
+
+The supplied starter's dev command uses port 3040. Open
+`http://localhost:3040` after the server starts, then check the homepage,
+navigation, download link, code blocks, and narrow-screen layout. These checks
+are separate from the passing demo tests and static validation.
+
+## Publish through Thally Cloud
+
+Managed publication is still pending; no live documentation URL has been
+verified. The source repository linked above is separate from a managed
+deployment. The
+[Thally Cloud guide](https://docs.thally.io/guides/thally-cloud) describes the
+managed path:
+
+1. Sign in to Thally Cloud and complete the GitHub connection. The GitHub App
+   needs access to the selected documentation repository.
+2. Create a site and connect the compatible Logbrief project. Confirm the
+   repository, production branch, and chosen site address.
+3. Review and publish. Inspect the deployment result and the commit it uses.
+4. Open the actual public URL and repeat the quickstart download and navigation
+   checks before sharing the site.
+
+Do not substitute a successful local preview for a confirmed managed publish.
+Once publication succeeds, add the verified live site and article links and
+record any deployment-specific fixes here.
+
+## What this exercise shows
+
+The authored content fits cleanly into MDX, navigation, and site identity
+files. The command examples are testable without the site runtime, which
+keeps documentation work moving when setup fails. Installation recovery and
+Cloud account access remain part of the publishing experience and should be
+reported separately from writing quality.
+
+For the framework's current setup instructions, use the
+[Thally quickstart](https://docs.thally.io/quickstart) and
+[CLI guide](https://docs.thally.io/guides/cli-overview).

@@ -1,0 +1,6 @@
+{"service":"checkout","level":"info","message":"checkout started"}
+{"service":"catalog","level":"info","message":"product loaded"}
+{"service":"checkout","level":"warn","message":"payment retry"}
+{"service":"checkout","level":"error","message":"payment timeout"}
+{"service":"catalog","level":"error","message":"inventory unavailable"}
+{"service":"checkout","level":"error","message":"payment timeout"}

@@ -1,0 +1,110 @@
+---
+title: Summarize your first log export
+navTitle: Quickstart
+description: Run Logbrief against six synthetic log records and verify the exact JSON summary.
+---
+
+In this quickstart, you will summarize a bundled log export and keep only its
+warnings and errors. You do not need an account, API key, or package install.
+
+## Before you begin
+
+Use Node.js 24.19.0, the version tested for this demo.
+[Download the demo ZIP](/downloads/logbrief-demo.zip) and extract it, or use
+the supplied project source. Open a terminal in the extracted project's root
+directory, which contains `demo/logbrief.mjs` and
+`demo/examples/release.jsonl`.
+
+```bash
+node --version
+```
+
+The verified environment reports `v24.19.0`. The CLI uses only Node's built-in
+modules. You do not need to install the documentation website's dependencies
+to run it.
+
+## Run the included export
+
+The fixture contains six synthetic records from two example services.
+Each nonblank line is one JSON object. For example:
+
+```json
+{"service":"checkout","level":"error","message":"payment timeout"}
+```
+
+Run this command from the project root:
+
+```bash
+node demo/logbrief.mjs demo/examples/release.jsonl
+```
+
+Expected output:
+
+```json
+{
+  "recordsRead": 6,
+  "recordsMatched": 6,
+  "byService": {
+    "catalog": 2,
+    "checkout": 4
+  },
+  "byLevel": {
+    "error": 3,
+    "info": 2,
+    "warn": 1
+  }
+}
+```
+
+`recordsRead` counts valid, nonblank input records. `recordsMatched` counts
+the records that pass your filters. With no filters, both are six.
+`byService` and `byLevel` count only the matched records; absent categories
+are omitted rather than filled with zeroes.
+
+## Keep warnings and errors
+
+```bash
+node demo/logbrief.mjs demo/examples/release.jsonl --min-level warn
+```
+
+Expected output:
+
+```json
+{
+  "recordsRead": 6,
+  "recordsMatched": 4,
+  "byService": {
+    "catalog": 1,
+    "checkout": 3
+  },
+  "byLevel": {
+    "error": 3,
+    "warn": 1
+  }
+}
+```
+
+`--min-level warn` includes both `warn` and `error`. Logbrief still reads
+and validates all six records before returning the four matching records.
+
+## Check your setup
+
+Run the demo's automated tests:
+
+```bash
+node --test demo/logbrief.test.mjs
+```
+
+The verified run passed all 12 tests with zero failures. Tests cover the
+example counts, combined filters, empty input, invalid data, and read errors.
+Test timing and the runner's display may vary.
+
+If a command fails:
+
+- `node: command not found`: install Node.js and open a new terminal.
+- `Cannot find module` naming `logbrief.mjs`: run from the project root.
+- `Cannot read input: ENOENT`: check the input path and current directory.
+- `Line N: ...`: fix the named physical line in your input. Filters do not
+  bypass invalid records, and an error produces no partial JSON summary.
+
+Next, [compare checkout errors before and after a release](/guides/compare-release-logs).
